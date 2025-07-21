@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "93047817894",
+    "project_id": "notificationprototype-dea3a",
+    "storage_bucket": "notificationprototype-dea3a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:93047817894:android:6a771b5c27c32495d95667",
+        "android_client_info": {
+          "package_name": "com.notificationprototype"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCPKhGhYX6eGkPIWUNklrABa8zxjZ-6fI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
