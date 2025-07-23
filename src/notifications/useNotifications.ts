@@ -9,47 +9,44 @@ import {
 
 interface UseNotificationsProps {
   backendUrl: string;
-  onNotificationTap: (data: any) => void; // Deep linking entry point
+  onNotificationTap: (data: any) => void; // Handle tap e.g. deep link
 }
 
 export const useNotifications = ({ backendUrl, onNotificationTap }: UseNotificationsProps) => {
   useEffect(() => {
     const initialize = async () => {
       const granted = await requestSystemPermissions();
-      if (granted) await getAndRegisterToken(backendUrl);
+      if (granted) {
+        await getAndRegisterToken(backendUrl);
+      }
     };
     initialize();
 
-    // Foreground → show custom local notification
     const unsubscribeForeground = messaging().onMessage(async remoteMessage => {
-      console.log('📥 Foreground FCM:', remoteMessage);
+      console.log('📥 Foreground message:', remoteMessage);
       await displayLocalNotification(remoteMessage);
     });
 
-    // Background notification (tap handler)
     const unsubscribeBackgroundOpen = messaging().onNotificationOpenedApp(remoteMessage => {
-      console.log('📲 Opened from background:', remoteMessage);
-      onNotificationTap(remoteMessage.data);
+      console.log('📲 Background tap:', remoteMessage);
+      onNotificationTap(remoteMessage?.data);
     });
 
-    // App launched by tapping a notification (cold start)
     messaging().getInitialNotification().then(remoteMessage => {
       if (remoteMessage) {
-        console.log('🚀 Opened from quit state:', remoteMessage);
-        onNotificationTap(remoteMessage.data);
+        console.log('🚀 Cold start tap:', remoteMessage);
+        onNotificationTap(remoteMessage?.data);
       }
     });
 
-    // FCM token refresh
     const unsubscribeTokenRefresh = messaging().onTokenRefresh(async token => {
-      console.log('🔄 FCM token refreshed:', token);
+      console.log('🔄 Token refreshed:', token);
       await getAndRegisterToken(backendUrl);
     });
 
-    // Local notification (Notifee) tap
-    const unsubscribeNotifeePress = notifee.onForegroundEvent(({ type, detail }) => {
+    const unsubscribeNotifeeTap = notifee.onForegroundEvent(({ type, detail }) => {
       if (type === EventType.PRESS) {
-        console.log('🖱️ Notifee tap event:', detail.notification?.data);
+        console.log('🖱️ Local tap:', detail.notification?.data);
         onNotificationTap(detail.notification?.data);
       }
     });
@@ -58,7 +55,7 @@ export const useNotifications = ({ backendUrl, onNotificationTap }: UseNotificat
       unsubscribeForeground();
       unsubscribeBackgroundOpen();
       unsubscribeTokenRefresh();
-      unsubscribeNotifeePress();
+      unsubscribeNotifeeTap();
     };
   }, [backendUrl, onNotificationTap]);
 };

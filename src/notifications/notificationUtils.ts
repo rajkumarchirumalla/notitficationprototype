@@ -1,8 +1,8 @@
-import { Alert, PermissionsAndroid, Platform } from 'react-native';
+import { Alert, Platform, PermissionsAndroid } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, AndroidStyle } from '@notifee/react-native';
 
-/** Ask for notification permissions */
+/** Ask for system notification permissions */
 export const requestSystemPermissions = async (): Promise<boolean> => {
   try {
     if (Platform.OS === 'android') {
@@ -23,38 +23,43 @@ export const requestSystemPermissions = async (): Promise<boolean> => {
         badge: true,
         sound: true,
       });
+
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
       if (enabled) {
         await notifee.requestPermission();
         return true;
       }
+
       Alert.alert('Permission Denied', 'Notification permission not granted.');
       return false;
     }
-  } catch (err) {
-    console.error('❌ Permission error:', err);
+  } catch (error) {
+    console.error('❌ Permission error:', error);
     return false;
   }
 };
 
-/** Get & register FCM token */
+/** Register FCM token with backend */
 export const getAndRegisterToken = async (backendUrl: string) => {
   try {
     const token = await messaging().getToken();
     console.log('📲 FCM Token:', token);
+
     await fetch(`${backendUrl}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, platform: Platform.OS }),
     });
-  } catch (err) {
-    console.error('❌ Token register error:', err);
+  } catch (error) {
+    
+    console.error('❌ Token registration failed:', error);
   }
 };
 
-/** Show custom local notification (foreground only) */
+/** Display a local notification (foreground only) */
 export const displayLocalNotification = async (remoteMessage: any) => {
   const { title, body, android } = remoteMessage.notification || {};
   const image = android?.imageUrl;
@@ -67,19 +72,28 @@ export const displayLocalNotification = async (remoteMessage: any) => {
   });
 
   await notifee.displayNotification({
-    title: title || 'New Message',
-    body: body || 'You received a message.',
-    data, // pass full data for tap event
+    title: title || 'New Notification',
+    body: body || 'You have a new message.',
+    data,
     android: {
       channelId: 'default',
       smallIcon: 'ic_launcher',
       pressAction: { id: 'default' },
-      style: image
-        ? {
-            type: AndroidStyle.BIGPICTURE,
-            picture: image,
-          }
-        : undefined,
+      style:
+        Platform.OS === 'android' && image
+          ? {
+              type: AndroidStyle.BIGPICTURE,
+              picture: image,
+            }
+          : undefined,
+    },
+    ios: {
+      sound: 'default',
+      foregroundPresentationOptions: {
+        alert: true,
+        badge: true,
+        sound: true,
+      },
     },
   });
 };

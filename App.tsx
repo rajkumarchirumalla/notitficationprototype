@@ -18,7 +18,7 @@ const App = () => {
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
 
   useNotifications({
-    backendUrl: 'http://192.168.0.24:3000',
+    backendUrl: 'http://192.168.0.43:3000',
     onNotificationTap: (data) => {
       console.log('🔗 Notification Deep Link:', data);
       if (data?.screen) {
